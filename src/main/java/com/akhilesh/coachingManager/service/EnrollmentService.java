@@ -1,7 +1,7 @@
 package com.akhilesh.coachingManager.service;
 
-import com.akhilesh.coachingManager.dto.enrollmentdto.EnrollmentRequest;
-import com.akhilesh.coachingManager.dto.enrollmentdto.EnrollmentResponse;
+import com.akhilesh.coachingManager.dto.EnrollmentRequest;
+import com.akhilesh.coachingManager.dto.EnrollmentResponse;
 import com.akhilesh.coachingManager.entity.Batch;
 import com.akhilesh.coachingManager.entity.Enrollment;
 import com.akhilesh.coachingManager.entity.Student;
@@ -90,6 +90,19 @@ public class EnrollmentService {
             throw new ResourceNotFoundException("Student not found with id " +id);
         }
         return student;
+    }
+
+    @Transactional(readOnly = true)
+    public List<EnrollmentResponse> getMyEnrollments(String email) {
+
+        Student student = studentRepository.findByUserEmail(email)
+                .filter(s -> !s.isDeleted())
+                .orElseThrow(() -> new ResourceNotFoundException("Student profile not found"));
+
+        return enrollmentRepository.findByStudentId(student.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
 }

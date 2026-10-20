@@ -1,4 +1,4 @@
-package com.akhilesh.coachingManager.dto.feedto;
+package com.akhilesh.coachingManager.dto;
 
 import com.akhilesh.coachingManager.entity.FeeStatus;
 import lombok.AllArgsConstructor;

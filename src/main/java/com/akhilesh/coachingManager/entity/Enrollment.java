@@ -29,3 +29,4 @@ public class Enrollment {
     @Column(nullable = false)
     private LocalDate joinDate;
 }
+

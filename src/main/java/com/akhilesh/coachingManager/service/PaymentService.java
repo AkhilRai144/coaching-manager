@@ -2,8 +2,9 @@ package com.akhilesh.coachingManager.service;
 
 
 
-import com.akhilesh.coachingManager.dto.paymentdto.PaymentRequest;
-import com.akhilesh.coachingManager.dto.paymentdto.PaymentResponse;
+import com.akhilesh.coachingManager.dto.PaymentRequest;
+import com.akhilesh.coachingManager.dto.PaymentResponse;
+import com.akhilesh.coachingManager.audit.Audited;
 import com.akhilesh.coachingManager.entity.FeeDue;
 import com.akhilesh.coachingManager.entity.FeeStatus;
 import com.akhilesh.coachingManager.entity.Payment;
@@ -48,6 +49,7 @@ public class PaymentService {
     }
 
     @Transactional
+    @Audited("PAYMENT_RECORDED")
     public PaymentResponse recordPayment(PaymentRequest request) {
 
         FeeDue due = feeDueRepository.findByIdForUpdate(request.getFeeDueId())

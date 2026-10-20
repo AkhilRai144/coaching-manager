@@ -1,8 +1,9 @@
 package com.akhilesh.coachingManager.service;
 
-import com.akhilesh.coachingManager.dto.feedto.FeeDueResponse;
-import com.akhilesh.coachingManager.dto.feedto.GenerateFeesRequest;
-import com.akhilesh.coachingManager.dto.feedto.GenerateFeesResponse;
+import com.akhilesh.coachingManager.audit.Audited;
+import com.akhilesh.coachingManager.dto.FeeDueResponse;
+import com.akhilesh.coachingManager.dto.GenerateFeesRequest;
+import com.akhilesh.coachingManager.dto.GenerateFeesResponse;
 import com.akhilesh.coachingManager.entity.*;
 import com.akhilesh.coachingManager.exception.ResourceNotFoundException;
 import com.akhilesh.coachingManager.repository.BatchRepository;
@@ -55,6 +56,7 @@ public class FeeService {
     }
 
     @Transactional
+    @Audited("FEES_GENERATED")
     public GenerateFeesResponse generateFees(GenerateFeesRequest request) {
 
         Batch batch = batchRepository.findById(request.getBatchId())
@@ -126,6 +128,19 @@ public class FeeService {
     @Transactional(readOnly = true)
     public List<FeeDueResponse> getPendingDues() {
         return feeDueRepository.findByStatus(FeeStatus.PENDING)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<FeeDueResponse> getMyDues(String email) {
+
+        Student student = studentRepository.findByUserEmail(email)
+                .filter(s -> !s.isDeleted())
+                .orElseThrow(() -> new ResourceNotFoundException("Student profile not found"));
+
+        return feeDueRepository.findByEnrollmentStudentId(student.getId())
                 .stream()
                 .map(this::toResponse)
                 .toList();

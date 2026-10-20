@@ -1,8 +1,9 @@
 package com.akhilesh.coachingManager.service;
 
-import com.akhilesh.coachingManager.dto.studentdto.StudentRequest;
-import com.akhilesh.coachingManager.dto.studentdto.StudentResponse;
-import com.akhilesh.coachingManager.dto.studentdto.StudentUpdateRequest;
+import com.akhilesh.coachingManager.audit.Audited;
+import com.akhilesh.coachingManager.dto.StudentRequest;
+import com.akhilesh.coachingManager.dto.StudentResponse;
+import com.akhilesh.coachingManager.dto.StudentUpdateRequest;
 import com.akhilesh.coachingManager.entity.Role;
 import com.akhilesh.coachingManager.entity.Student;
 import com.akhilesh.coachingManager.entity.User;
@@ -71,6 +72,7 @@ public class StudentService {
     }
 
     @Transactional
+    @Audited("STUDENT_DELETED")
     public void deleteStudent(Long id){
         Student student = findActiveStudent(id);
         student.setDeleted(true);

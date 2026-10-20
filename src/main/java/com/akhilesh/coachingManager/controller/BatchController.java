@@ -1,12 +1,10 @@
 package com.akhilesh.coachingManager.controller;
 
-import com.akhilesh.coachingManager.dto.batchdto.BatchRequest;
-import com.akhilesh.coachingManager.dto.batchdto.BatchResponse;
-import com.akhilesh.coachingManager.dto.studentdto.StudentResponse;
+import com.akhilesh.coachingManager.dto.BatchRequest;
+import com.akhilesh.coachingManager.dto.BatchResponse;
 import com.akhilesh.coachingManager.service.BatchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,3 +35,4 @@ public class BatchController {
         return new ResponseEntity<>(batchResponse,HttpStatus.OK);
     }
 }
+

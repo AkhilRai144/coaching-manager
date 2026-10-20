@@ -14,4 +14,6 @@ public interface BatchRepository extends JpaRepository<Batch,Long> {
 
     boolean existsByTeacherIdAndStartTimeLessThanAndEndTimeGreaterThan(
             Long teacherId, LocalTime endTime, LocalTime startTime);
+
+    boolean existsByIdAndTeacherUserEmail(Long id, String email);
 }

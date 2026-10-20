@@ -1,4 +1,4 @@
-package com.akhilesh.coachingManager.dto.studentdto;
+package com.akhilesh.coachingManager.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

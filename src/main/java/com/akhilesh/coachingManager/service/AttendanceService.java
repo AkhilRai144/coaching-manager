@@ -1,13 +1,15 @@
 package com.akhilesh.coachingManager.service;
 
-import com.akhilesh.coachingManager.dto.attendancedto.AttendanceEntry;
-import com.akhilesh.coachingManager.dto.attendancedto.AttendanceRequest;
-import com.akhilesh.coachingManager.dto.attendancedto.AttendanceResponse;
+import com.akhilesh.coachingManager.audit.Audited;
+import com.akhilesh.coachingManager.dto.AttendanceEntry;
+import com.akhilesh.coachingManager.dto.AttendanceRequest;
+import com.akhilesh.coachingManager.dto.AttendanceResponse;
 import com.akhilesh.coachingManager.entity.Attendance;
 import com.akhilesh.coachingManager.entity.Batch;
 import com.akhilesh.coachingManager.entity.Enrollment;
 import com.akhilesh.coachingManager.entity.Student;
 import com.akhilesh.coachingManager.exception.DuplicateResourceException;
+import com.akhilesh.coachingManager.exception.ForbiddenException;
 import com.akhilesh.coachingManager.exception.InvalidRequestException;
 import com.akhilesh.coachingManager.exception.ResourceNotFoundException;
 import com.akhilesh.coachingManager.repository.AttendanceRepository;
@@ -47,13 +49,26 @@ public class AttendanceService {
                 attendance.getStatus());
     }
 
+    private void checkBatchAccess(Long batchId, String email, boolean isOwner) {
+        if (isOwner) {
+            return;
+        }
+        if (!batchRepository.existsByIdAndTeacherUserEmail(batchId, email)) {
+            throw new ForbiddenException("You can access attendance only for your own batches");
+        }
+    }
+
+    @Audited("ATTENDANCE_MARKED")
     @Transactional
-    public List<AttendanceResponse> markAttendance(AttendanceRequest request) {
+    public List<AttendanceResponse> markAttendance(
+            AttendanceRequest request, String email, boolean isOwner) {
 
         if (!batchRepository.existsById(request.getBatchId())) {
             throw new ResourceNotFoundException(
                     "Batch not found with id " + request.getBatchId());
         }
+
+        checkBatchAccess(request.getBatchId(), email, isOwner);
 
         if (attendanceRepository.existsByEnrollmentBatchIdAndAttendanceDate(
                 request.getBatchId(), request.getAttendanceDate())) {
@@ -98,11 +113,14 @@ public class AttendanceService {
     }
 
     @Transactional(readOnly = true)
-    public List<AttendanceResponse> getAttendance(Long batchId, LocalDate date) {
+    public List<AttendanceResponse> getAttendance(
+            Long batchId, LocalDate date, String email, boolean isOwner) {
 
         if (!batchRepository.existsById(batchId)) {
             throw new ResourceNotFoundException("Batch not found with id " + batchId);
         }
+
+        checkBatchAccess(batchId, email, isOwner);
 
         return attendanceRepository
                 .findByEnrollmentBatchIdAndAttendanceDate(batchId, date)

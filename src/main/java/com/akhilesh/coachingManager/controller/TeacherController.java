@@ -1,9 +1,9 @@
 package com.akhilesh.coachingManager.controller;
 
-import com.akhilesh.coachingManager.dto.teacherdto.TeacherRequest;
-import com.akhilesh.coachingManager.dto.teacherdto.TeacherResponse;
-import com.akhilesh.coachingManager.dto.teacherdto.TeacherUpdateRequest;
-import com.akhilesh.coachingManager.dto.teacherdto.TeacherUpdateResponse;
+import com.akhilesh.coachingManager.dto.TeacherRequest;
+import com.akhilesh.coachingManager.dto.TeacherResponse;
+import com.akhilesh.coachingManager.dto.TeacherUpdateRequest;
+import com.akhilesh.coachingManager.dto.TeacherUpdateResponse;
 import com.akhilesh.coachingManager.service.TeacherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

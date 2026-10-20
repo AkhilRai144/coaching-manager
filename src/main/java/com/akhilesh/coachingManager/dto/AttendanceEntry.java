@@ -1,4 +1,5 @@
-package com.akhilesh.coachingManager.dto.attendancedto;
+package com.akhilesh.coachingManager.dto;
+
 
 import com.akhilesh.coachingManager.entity.AttendanceStatus;
 import jakarta.validation.constraints.NotNull;
@@ -15,3 +16,4 @@ public class AttendanceEntry {
     @NotNull(message = "Status is required")
     private AttendanceStatus status;
 }
+

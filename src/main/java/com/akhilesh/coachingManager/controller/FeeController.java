@@ -1,8 +1,8 @@
 package com.akhilesh.coachingManager.controller;
 
-import com.akhilesh.coachingManager.dto.feedto.FeeDueResponse;
-import com.akhilesh.coachingManager.dto.feedto.GenerateFeesRequest;
-import com.akhilesh.coachingManager.dto.feedto.GenerateFeesResponse;
+import com.akhilesh.coachingManager.dto.FeeDueResponse;
+import com.akhilesh.coachingManager.dto.GenerateFeesRequest;
+import com.akhilesh.coachingManager.dto.GenerateFeesResponse;
 import com.akhilesh.coachingManager.service.FeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,3 +44,4 @@ public class FeeController {
         return ResponseEntity.ok(feeService.getPendingDues());
     }
 }
+

@@ -1,4 +1,4 @@
-package com.akhilesh.coachingManager.dto.teacherdto;
+package com.akhilesh.coachingManager.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,9 +7,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class TeacherUpdateResponse {
+public class TeacherResponse {
+
+    private Long id;
 
     private String name;
 
     private String subject;
+
+    private String  email;
+
 }

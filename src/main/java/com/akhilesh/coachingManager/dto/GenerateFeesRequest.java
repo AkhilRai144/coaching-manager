@@ -1,4 +1,4 @@
-package com.akhilesh.coachingManager.dto.feedto;
+package com.akhilesh.coachingManager.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

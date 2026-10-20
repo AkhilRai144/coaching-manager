@@ -10,4 +10,6 @@ public interface TeacherRepository extends JpaRepository<Teacher,Long> {
 
     @EntityGraph(attributePaths = "user")
     List<Teacher> findByDeletedFalse();
+
+    boolean existsByUserIdAndDeletedTrue(Long userId);
 }

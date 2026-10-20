@@ -1,4 +1,4 @@
-package com.akhilesh.coachingManager.dto.batchdto;
+package com.akhilesh.coachingManager.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,3 +29,4 @@ public class BatchRequest {
     @NotNull(message = "Teacher id is required")
     private Long teacherId;
 }
+

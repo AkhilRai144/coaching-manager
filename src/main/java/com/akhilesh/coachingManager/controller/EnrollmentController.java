@@ -1,7 +1,7 @@
 package com.akhilesh.coachingManager.controller;
 
-import com.akhilesh.coachingManager.dto.enrollmentdto.EnrollmentRequest;
-import com.akhilesh.coachingManager.dto.enrollmentdto.EnrollmentResponse;
+import com.akhilesh.coachingManager.dto.EnrollmentRequest;
+import com.akhilesh.coachingManager.dto.EnrollmentResponse;
 import com.akhilesh.coachingManager.service.EnrollmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,3 +34,4 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.getEnrollmentByStudent(studentId));
     }
 }
+

@@ -1,4 +1,4 @@
-package com.akhilesh.coachingManager.dto.paymentdto;
+package com.akhilesh.coachingManager.dto;
 
 import com.akhilesh.coachingManager.entity.PaymentMode;
 import jakarta.validation.constraints.Digits;

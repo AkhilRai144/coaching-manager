@@ -1,7 +1,8 @@
 package com.akhilesh.coachingManager.service;
 
-import com.akhilesh.coachingManager.dto.batchdto.BatchRequest;
-import com.akhilesh.coachingManager.dto.batchdto.BatchResponse;
+import com.akhilesh.coachingManager.audit.Audited;
+import com.akhilesh.coachingManager.dto.BatchRequest;
+import com.akhilesh.coachingManager.dto.BatchResponse;
 import com.akhilesh.coachingManager.entity.Batch;
 import com.akhilesh.coachingManager.entity.Teacher;
 import com.akhilesh.coachingManager.exception.DuplicateResourceException;
@@ -23,6 +24,7 @@ public class BatchService {
     private final TeacherRepository teacherRepository;
 
     @Transactional
+    @Audited("BATCH_CREATED")
     public BatchResponse addBatch(BatchRequest request){
         if(!request.getEndTime().isAfter(request.getStartTime())){
             throw  new InvalidRequestException("End time must be after start time");

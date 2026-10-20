@@ -1,4 +1,4 @@
-package com.akhilesh.coachingManager.dto.attendancedto;
+package com.akhilesh.coachingManager.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;

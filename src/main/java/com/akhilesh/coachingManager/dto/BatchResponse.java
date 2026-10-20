@@ -1,4 +1,4 @@
-package com.akhilesh.coachingManager.dto.batchdto;
+package com.akhilesh.coachingManager.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,3 +26,4 @@ public class BatchResponse {
 
     private String teacherName;
 }
+

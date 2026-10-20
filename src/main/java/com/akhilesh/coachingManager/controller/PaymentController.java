@@ -1,8 +1,8 @@
 package com.akhilesh.coachingManager.controller;
 
 
-import com.akhilesh.coachingManager.dto.paymentdto.PaymentRequest;
-import com.akhilesh.coachingManager.dto.paymentdto.PaymentResponse;
+import com.akhilesh.coachingManager.dto.PaymentRequest;
+import com.akhilesh.coachingManager.dto.PaymentResponse;
 import com.akhilesh.coachingManager.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

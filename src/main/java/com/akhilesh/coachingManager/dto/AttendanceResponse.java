@@ -1,5 +1,7 @@
-package com.akhilesh.coachingManager.dto.enrollmentdto;
+package com.akhilesh.coachingManager.dto;
 
+
+import com.akhilesh.coachingManager.entity.AttendanceStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,17 +11,14 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @AllArgsConstructor
-public class EnrollmentResponse {
+public class AttendanceResponse {
 
     private Long id;
-
     private Long studentId;
-
     private String studentName;
-
     private Long batchId;
-
     private String batchName;
-
-    private LocalDate joinDate;
+    private LocalDate attendanceDate;
+    private AttendanceStatus status;
 }
+
