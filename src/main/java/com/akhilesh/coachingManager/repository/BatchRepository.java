@@ -16,4 +16,7 @@ public interface BatchRepository extends JpaRepository<Batch,Long> {
             Long teacherId, LocalTime endTime, LocalTime startTime);
 
     boolean existsByIdAndTeacherUserEmail(Long id, String email);
+
+    @EntityGraph(attributePaths = "teacher")
+    List<Batch> findByTeacherUserEmail(String email);
 }

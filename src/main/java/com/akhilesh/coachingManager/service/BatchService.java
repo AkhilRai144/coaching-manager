@@ -68,6 +68,14 @@ public class BatchService {
         return  toResponse(batch);
     }
 
+    @Transactional(readOnly = true)
+    public List<BatchResponse> getMyBatches(String email) {
+        return batchRepository.findByTeacherUserEmail(email)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
 
 
 

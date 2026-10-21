@@ -6,6 +6,7 @@ import com.akhilesh.coachingManager.entity.Batch;
 import com.akhilesh.coachingManager.entity.Enrollment;
 import com.akhilesh.coachingManager.entity.Student;
 import com.akhilesh.coachingManager.exception.DuplicateResourceException;
+import com.akhilesh.coachingManager.exception.ForbiddenException;
 import com.akhilesh.coachingManager.exception.ResourceNotFoundException;
 import com.akhilesh.coachingManager.repository.BatchRepository;
 import com.akhilesh.coachingManager.repository.EnrollmentRepository;
@@ -101,6 +102,24 @@ public class EnrollmentService {
 
         return enrollmentRepository.findByStudentId(student.getId())
                 .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EnrollmentResponse> getMyBatchStudents(Long batchId, String email) {
+
+        if (!batchRepository.existsById(batchId)) {
+            throw new ResourceNotFoundException("Batch not found with id " + batchId);
+        }
+
+        if (!batchRepository.existsByIdAndTeacherUserEmail(batchId, email)) {
+            throw new ForbiddenException("You can access only your own batches");
+        }
+
+        return enrollmentRepository.findByBatchId(batchId)
+                .stream()
+                .filter(e -> !e.getStudent().isDeleted())
                 .map(this::toResponse)
                 .toList();
     }
