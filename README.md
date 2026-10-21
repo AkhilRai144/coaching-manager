@@ -39,7 +39,7 @@ JWT (jjwt), MySQL, JUnit 5, Mockito, Maven
 | Role | Access |
 |---|---|
 | OWNER | Everything |
-| TEACHER | View batches and enrollments, mark attendance for own batches |
+| TEACHER | View own batches and their students, mark attendance for own batches |
 | STUDENT | Own fees and enrollments under `/api/me` |
 
 ## Main endpoints
