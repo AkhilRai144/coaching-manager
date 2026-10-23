@@ -9,20 +9,19 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 public interface FeeDueRepository extends JpaRepository<FeeDue, Long> {
 
     @EntityGraph(attributePaths = {"enrollment.student", "enrollment.batch"})
-    List<FeeDue> findByEnrollmentBatchIdAndFeeMonth(Long batchId, LocalDate feeMonth);
+    List<FeeDue> findByEnrollmentBatchIdOrderByPeriodStartDesc(Long batchId);
 
     @EntityGraph(attributePaths = {"enrollment.student", "enrollment.batch"})
     List<FeeDue> findByEnrollmentStudentId(Long studentId);
 
     @EntityGraph(attributePaths = {"enrollment.student", "enrollment.batch"})
-    List<FeeDue> findByStatus(FeeStatus status);
+    List<FeeDue> findByStatusAndEnrollmentStudentDeletedFalse(FeeStatus status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select f from FeeDue f where f.id = :id")

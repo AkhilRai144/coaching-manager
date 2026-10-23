@@ -6,12 +6,15 @@ import com.akhilesh.coachingManager.dto.GenerateFeesResponse;
 import com.akhilesh.coachingManager.service.FeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -28,10 +31,8 @@ public class FeeController {
     }
 
     @GetMapping("/batch/{batchId}")
-    public ResponseEntity<List<FeeDueResponse>> getDuesByBatch(
-            @PathVariable Long batchId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate month) {
-        return ResponseEntity.ok(feeService.getDuesByBatchAndMonth(batchId, month));
+    public ResponseEntity<List<FeeDueResponse>> getDuesByBatch(@PathVariable Long batchId) {
+        return ResponseEntity.ok(feeService.getDuesByBatch(batchId));
     }
 
     @GetMapping("/student/{studentId}")
@@ -44,4 +45,3 @@ public class FeeController {
         return ResponseEntity.ok(feeService.getPendingDues());
     }
 }
-

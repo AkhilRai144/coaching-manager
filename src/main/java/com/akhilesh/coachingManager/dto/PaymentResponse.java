@@ -1,6 +1,5 @@
 package com.akhilesh.coachingManager.dto;
 
-
 import com.akhilesh.coachingManager.entity.FeeStatus;
 import com.akhilesh.coachingManager.entity.PaymentMode;
 import lombok.AllArgsConstructor;
@@ -22,4 +21,6 @@ public class PaymentResponse {
     private PaymentMode mode;
     private BigDecimal remainingAmount;
     private FeeStatus feeStatus;
+    private LocalDate periodStart;
+    private LocalDate periodEnd;
 }

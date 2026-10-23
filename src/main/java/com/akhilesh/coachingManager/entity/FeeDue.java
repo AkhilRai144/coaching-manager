@@ -7,9 +7,10 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
 @Entity
 @Table(name = "fee_due",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"enrollment_id", "fee_month"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"enrollment_id", "period_start"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,7 +25,10 @@ public class FeeDue {
     private Enrollment enrollment;
 
     @Column(nullable = false)
-    private LocalDate feeMonth;
+    private LocalDate periodStart;
+
+    @Column(nullable = false)
+    private LocalDate periodEnd;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;

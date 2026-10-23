@@ -45,7 +45,9 @@ public class PaymentService {
                 payment.getPaidOn(),
                 payment.getMode(),
                 remaining,
-                due.getStatus());
+                due.getStatus(),
+                due.getPeriodStart(),
+                due.getPeriodEnd());
     }
 
     @Transactional

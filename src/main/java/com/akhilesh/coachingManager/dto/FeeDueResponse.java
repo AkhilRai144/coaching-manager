@@ -16,7 +16,8 @@ public class FeeDueResponse {
     private String studentName;
     private Long batchId;
     private String batchName;
-    private LocalDate feeMonth;
+    private LocalDate periodStart;
+    private LocalDate periodEnd;
     private BigDecimal amount;
     private FeeStatus status;
 }

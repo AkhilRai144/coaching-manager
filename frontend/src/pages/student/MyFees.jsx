@@ -1,5 +1,5 @@
 import { useFetch } from '../../hooks'
-import { money, monthLabel } from '../../format'
+import { money, period } from '../../format'
 import Alert from '../../components/Alert'
 
 export default function MyFees() {
@@ -17,7 +17,7 @@ export default function MyFees() {
                         <thead>
                         <tr>
                             <th>Batch</th>
-                            <th>Month</th>
+                            <th>Period</th>
                             <th>Fee</th>
                             <th>Status</th>
                         </tr>
@@ -26,7 +26,7 @@ export default function MyFees() {
                         {fees.data.map((f) => (
                             <tr key={f.id}>
                                 <td>{f.batchName}</td>
-                                <td>{monthLabel(f.feeMonth)}</td>
+                                <td>{period(f.periodStart, f.periodEnd)}</td>
                                 <td>{money(f.amount)}</td>
                                 <td>
                                     <span className={`badge ${f.status}`}>{f.status}</span>

@@ -51,6 +51,8 @@ class FeeServiceTest {
     @Captor
     private ArgumentCaptor<List<FeeDue>> duesCaptor;
 
+    private final LocalDate today = LocalDate.now();
+
     private Batch buildBatch() {
         Batch batch = new Batch();
         batch.setId(1L);
@@ -59,112 +61,106 @@ class FeeServiceTest {
         return batch;
     }
 
-    private Enrollment buildEnrollment(Long enrollmentId, boolean studentDeleted, Batch batch) {
+    private Enrollment buildEnrollment(
+            Long id, boolean studentDeleted, Batch batch, LocalDate joinDate) {
         Student student = new Student();
-        student.setId(enrollmentId + 100);
-        student.setName("Student " + enrollmentId);
+        student.setId(id + 100);
+        student.setName("Student " + id);
         student.setDeleted(studentDeleted);
 
         Enrollment enrollment = new Enrollment();
-        enrollment.setId(enrollmentId);
+        enrollment.setId(id);
         enrollment.setStudent(student);
         enrollment.setBatch(batch);
+        enrollment.setJoinDate(joinDate);
         return enrollment;
     }
 
-    private GenerateFeesRequest buildRequest(LocalDate month) {
+    private GenerateFeesRequest buildRequest() {
         GenerateFeesRequest request = new GenerateFeesRequest();
         request.setBatchId(1L);
-        request.setFeeMonth(month);
         return request;
     }
 
-    @Test
-    void generateFees_createsDueForEachActiveStudent() {
-        Batch batch = buildBatch();
-        Enrollment e1 = buildEnrollment(1L, false, batch);
-        Enrollment e2 = buildEnrollment(2L, false, batch);
-
+    private void stub(Batch batch, List<FeeDue> existing, List<Enrollment> enrollments) {
         when(batchRepository.findById(1L)).thenReturn(Optional.of(batch));
-        when(feeDueRepository.findByEnrollmentBatchIdAndFeeMonth(1L, LocalDate.of(2026, 10, 1)))
-                .thenReturn(List.of());
-        when(enrollmentRepository.findByBatchId(1L)).thenReturn(List.of(e1, e2));
-
-        GenerateFeesResponse response =
-                feeService.generateFees(buildRequest(LocalDate.of(2026, 10, 1)));
-
-        assertThat(response.getCreated()).isEqualTo(2);
-        assertThat(response.getAlreadyExisted()).isEqualTo(0);
+        when(feeDueRepository.findByEnrollmentBatchIdOrderByPeriodStartDesc(1L))
+                .thenReturn(existing);
+        when(enrollmentRepository.findByBatchId(1L)).thenReturn(enrollments);
     }
 
     @Test
-    void generateFees_skipsDeletedStudent() {
+    void newStudent_getsOnlyFirstCycleStartingOnJoinDate() {
         Batch batch = buildBatch();
-        Enrollment active = buildEnrollment(1L, false, batch);
-        Enrollment deleted = buildEnrollment(2L, true, batch);
+        Enrollment e1 = buildEnrollment(1L, false, batch, today);
+        stub(batch, List.of(), List.of(e1));
 
-        when(batchRepository.findById(1L)).thenReturn(Optional.of(batch));
-        when(feeDueRepository.findByEnrollmentBatchIdAndFeeMonth(1L, LocalDate.of(2026, 10, 1)))
-                .thenReturn(List.of());
-        when(enrollmentRepository.findByBatchId(1L)).thenReturn(List.of(active, deleted));
-
-        GenerateFeesResponse response =
-                feeService.generateFees(buildRequest(LocalDate.of(2026, 10, 1)));
+        GenerateFeesResponse response = feeService.generateFees(buildRequest());
 
         assertThat(response.getCreated()).isEqualTo(1);
         verify(feeDueRepository).saveAll(duesCaptor.capture());
-        assertThat(duesCaptor.getValue()).hasSize(1);
-        assertThat(duesCaptor.getValue().get(0).getEnrollment()).isEqualTo(active);
+        FeeDue due = duesCaptor.getValue().get(0);
+        assertThat(due.getPeriodStart()).isEqualTo(today);
+        assertThat(due.getPeriodEnd()).isEqualTo(today.plusMonths(1).minusDays(1));
+        assertThat(due.getAmount()).isEqualByComparingTo("1500");
+        assertThat(due.getStatus()).isEqualTo(FeeStatus.PENDING);
     }
 
     @Test
-    void generateFees_doesNotDuplicateExistingDue() {
+    void studentJoinedTwoMonthsAgo_getsThreeCyclesFromJoinDate() {
         Batch batch = buildBatch();
-        Enrollment alreadyBilled = buildEnrollment(1L, false, batch);
-        Enrollment notBilled = buildEnrollment(2L, false, batch);
+        LocalDate join = today.minusMonths(2);
+        Enrollment e1 = buildEnrollment(1L, false, batch, join);
+        stub(batch, List.of(), List.of(e1));
 
-        FeeDue existing = new FeeDue();
-        existing.setEnrollment(alreadyBilled);
+        GenerateFeesResponse response = feeService.generateFees(buildRequest());
 
-        when(batchRepository.findById(1L)).thenReturn(Optional.of(batch));
-        when(feeDueRepository.findByEnrollmentBatchIdAndFeeMonth(1L, LocalDate.of(2026, 10, 1)))
-                .thenReturn(List.of(existing));
-        when(enrollmentRepository.findByBatchId(1L))
-                .thenReturn(List.of(alreadyBilled, notBilled));
+        assertThat(response.getCreated()).isEqualTo(3);
+        verify(feeDueRepository).saveAll(duesCaptor.capture());
+        assertThat(duesCaptor.getValue())
+                .extracting(FeeDue::getPeriodStart)
+                .containsExactly(join, join.plusMonths(1), join.plusMonths(2));
+    }
 
-        GenerateFeesResponse response =
-                feeService.generateFees(buildRequest(LocalDate.of(2026, 10, 1)));
+    @Test
+    void existingCycleIsNotBilledAgain() {
+        Batch batch = buildBatch();
+        LocalDate join = today.minusMonths(1);
+        Enrollment e1 = buildEnrollment(1L, false, batch, join);
+
+        FeeDue firstCycle = new FeeDue();
+        firstCycle.setEnrollment(e1);
+        firstCycle.setPeriodStart(join);
+        stub(batch, List.of(firstCycle), List.of(e1));
+
+        GenerateFeesResponse response = feeService.generateFees(buildRequest());
 
         assertThat(response.getCreated()).isEqualTo(1);
         assertThat(response.getAlreadyExisted()).isEqualTo(1);
         verify(feeDueRepository).saveAll(duesCaptor.capture());
-        assertThat(duesCaptor.getValue().get(0).getEnrollment()).isEqualTo(notBilled);
+        assertThat(duesCaptor.getValue().get(0).getPeriodStart())
+                .isEqualTo(join.plusMonths(1));
     }
 
     @Test
-    void generateFees_usesFirstOfMonthAndCopiesBatchFee() {
+    void deletedStudentIsSkipped() {
         Batch batch = buildBatch();
-        Enrollment e1 = buildEnrollment(1L, false, batch);
+        Enrollment active = buildEnrollment(1L, false, batch, today);
+        Enrollment deleted = buildEnrollment(2L, true, batch, today);
+        stub(batch, List.of(), List.of(active, deleted));
 
-        when(batchRepository.findById(1L)).thenReturn(Optional.of(batch));
-        when(feeDueRepository.findByEnrollmentBatchIdAndFeeMonth(1L, LocalDate.of(2026, 10, 1)))
-                .thenReturn(List.of());
-        when(enrollmentRepository.findByBatchId(1L)).thenReturn(List.of(e1));
+        GenerateFeesResponse response = feeService.generateFees(buildRequest());
 
-        feeService.generateFees(buildRequest(LocalDate.of(2026, 10, 15)));
-
+        assertThat(response.getCreated()).isEqualTo(1);
         verify(feeDueRepository).saveAll(duesCaptor.capture());
-        FeeDue saved = duesCaptor.getValue().get(0);
-        assertThat(saved.getFeeMonth()).isEqualTo(LocalDate.of(2026, 10, 1));
-        assertThat(saved.getAmount()).isEqualByComparingTo("1500");
-        assertThat(saved.getStatus()).isEqualTo(FeeStatus.PENDING);
+        assertThat(duesCaptor.getValue().get(0).getEnrollment()).isEqualTo(active);
     }
 
     @Test
-    void generateFees_missingBatch_throwsNotFound() {
+    void missingBatch_throwsNotFound() {
         when(batchRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> feeService.generateFees(buildRequest(LocalDate.of(2026, 10, 1))))
+        assertThatThrownBy(() -> feeService.generateFees(buildRequest()))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 }

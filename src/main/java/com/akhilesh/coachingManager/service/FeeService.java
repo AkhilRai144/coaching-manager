@@ -4,7 +4,11 @@ import com.akhilesh.coachingManager.audit.Audited;
 import com.akhilesh.coachingManager.dto.FeeDueResponse;
 import com.akhilesh.coachingManager.dto.GenerateFeesRequest;
 import com.akhilesh.coachingManager.dto.GenerateFeesResponse;
-import com.akhilesh.coachingManager.entity.*;
+import com.akhilesh.coachingManager.entity.Batch;
+import com.akhilesh.coachingManager.entity.Enrollment;
+import com.akhilesh.coachingManager.entity.FeeDue;
+import com.akhilesh.coachingManager.entity.FeeStatus;
+import com.akhilesh.coachingManager.entity.Student;
 import com.akhilesh.coachingManager.exception.ResourceNotFoundException;
 import com.akhilesh.coachingManager.repository.BatchRepository;
 import com.akhilesh.coachingManager.repository.EnrollmentRepository;
@@ -16,9 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +45,8 @@ public class FeeService {
                 student.getName(),
                 batch.getId(),
                 batch.getName(),
-                due.getFeeMonth(),
+                due.getPeriodStart(),
+                due.getPeriodEnd(),
                 due.getAmount(),
                 due.getStatus());
     }
@@ -55,22 +62,24 @@ public class FeeService {
         return student;
     }
 
-    @Transactional
     @Audited("FEES_GENERATED")
+    @Transactional
     public GenerateFeesResponse generateFees(GenerateFeesRequest request) {
 
         Batch batch = batchRepository.findById(request.getBatchId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Batch not found with id " + request.getBatchId()));
 
-        LocalDate month = request.getFeeMonth().withDayOfMonth(1);
+        LocalDate today = LocalDate.now();
 
-        List<FeeDue> existingDues =
-                feeDueRepository.findByEnrollmentBatchIdAndFeeMonth(batch.getId(), month);
-
-        Set<Long> alreadyBilled = existingDues.stream()
-                .map(due -> due.getEnrollment().getId())
-                .collect(Collectors.toSet());
+        // enrollment id -> us enrollment ke jin cycles ki due pehle se bani hai unki start dates
+        Map<Long, Set<LocalDate>> alreadyBilled = new HashMap<>();
+        for (FeeDue due : feeDueRepository
+                .findByEnrollmentBatchIdOrderByPeriodStartDesc(batch.getId())) {
+            alreadyBilled
+                    .computeIfAbsent(due.getEnrollment().getId(), k -> new HashSet<>())
+                    .add(due.getPeriodStart());
+        }
 
         int created = 0;
         int alreadyExisted = 0;
@@ -82,17 +91,29 @@ public class FeeService {
                 continue;
             }
 
-            if (alreadyBilled.contains(enrollment.getId())) {
-                alreadyExisted++;
-                continue;
-            }
+            Set<LocalDate> billed = alreadyBilled.getOrDefault(enrollment.getId(), Set.of());
+            LocalDate joinDate = enrollment.getJoinDate();
 
-            FeeDue due = new FeeDue();
-            due.setEnrollment(enrollment);
-            due.setFeeMonth(month);
-            due.setAmount(batch.getMonthlyFee());
-            newDues.add(due);
-            created++;
+            for (int n = 0; ; n++) {
+                LocalDate periodStart = joinDate.plusMonths(n);
+
+                if (periodStart.isAfter(today)) {
+                    break;
+                }
+
+                if (billed.contains(periodStart)) {
+                    alreadyExisted++;
+                    continue;
+                }
+
+                FeeDue due = new FeeDue();
+                due.setEnrollment(enrollment);
+                due.setPeriodStart(periodStart);
+                due.setPeriodEnd(joinDate.plusMonths(n + 1).minusDays(1));
+                due.setAmount(batch.getMonthlyFee());
+                newDues.add(due);
+                created++;
+            }
         }
 
         feeDueRepository.saveAll(newDues);
@@ -101,15 +122,15 @@ public class FeeService {
     }
 
     @Transactional(readOnly = true)
-    public List<FeeDueResponse> getDuesByBatchAndMonth(Long batchId, LocalDate month) {
+    public List<FeeDueResponse> getDuesByBatch(Long batchId) {
 
         if (!batchRepository.existsById(batchId)) {
             throw new ResourceNotFoundException("Batch not found with id " + batchId);
         }
 
-        return feeDueRepository
-                .findByEnrollmentBatchIdAndFeeMonth(batchId, month.withDayOfMonth(1))
+        return feeDueRepository.findByEnrollmentBatchIdOrderByPeriodStartDesc(batchId)
                 .stream()
+                .filter(d -> !d.getEnrollment().getStudent().isDeleted())
                 .map(this::toResponse)
                 .toList();
     }
@@ -127,7 +148,8 @@ public class FeeService {
 
     @Transactional(readOnly = true)
     public List<FeeDueResponse> getPendingDues() {
-        return feeDueRepository.findByStatus(FeeStatus.PENDING)
+        return feeDueRepository
+                .findByStatusAndEnrollmentStudentDeletedFalse(FeeStatus.PENDING)
                 .stream()
                 .map(this::toResponse)
                 .toList();
